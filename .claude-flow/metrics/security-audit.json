@@ -1,55 +1,111 @@
 {
-  "timestamp": "2026-05-14T12:46:29.564Z",
+  "timestamp": "2026-05-14T12:57:28.789Z",
   "mode": "headless",
   "workerType": "audit",
   "model": "haiku",
-  "durationMs": 35612,
-  "executionId": "audit_1778762753952_sa8ilj",
+  "durationMs": 59217,
+  "executionId": "audit_1778763389572_tok7us",
   "success": true,
   "findings": {
     "vulnerabilities": [
       {
-        "severity": "medium",
-        "file": ".claude/helpers/memory.js",
-        "line": 22,
-        "description": "Insecure file permissions: JSON memory files created with default umask (likely 0644). Sensitive session/context data may be world-readable. Should use fs.writeFileSync(MEMORY_FILE, data, { mode: 0o600 }) to restrict to owner-only access."
+        "severity": "high",
+        "file": "app/api/bookings/route.ts",
+        "line": 16,
+        "description": "Missing authentication check on booking creation endpoint. Any unauthenticated user can create bookings for any property. Endpoint should verify user identity before processing bookings.",
+        "category": "Authentication/Authorization"
       },
       {
         "severity": "medium",
-        "file": ".claude/helpers/session.js",
-        "line": 21,
-        "description": "Insecure file permissions: Session files created with default umask. Files contain context data and metrics that could be sensitive. Should explicitly set file mode to 0o600 (owner-only read/write)."
+        "file": "lib/supabase.ts",
+        "line": 13,
+        "description": "Missing input validation on propertyId parameter in getProperty(). While Supabase RLS provides protection, explicit validation at application layer is missing. Should validate UUID format and existence.",
+        "category": "Input Validation"
       },
       {
-        "severity": "low",
-        "file": ".claude/helpers/memory.js",
-        "line": 34,
-        "description": "Prototype pollution risk: User-supplied keys (e.g., '__proto__', 'constructor') could potentially modify object prototypes. Mitigated by JSON serialization but should validate keys against a whitelist or reject special names."
-      },
-      {
-        "severity": "low",
-        "file": ".claude/helpers/github-safe.js",
-        "line": 76,
-        "description": "Silent cleanup of temporary files: Empty catch block ignores cleanup failures which could leave sensitive body content in /tmp. Should log or handle cleanup errors, or use try-finally with explicit error handling."
-      },
-      {
-        "severity": "low",
-        "file": ".claude/helpers/session.js",
+        "severity": "medium",
+        "file": "lib/supabase.ts",
         "line": 18,
-        "description": "No input validation on session keys: update() method accepts arbitrary key names without validation. Could create invalid JSON keys or namespace collisions."
+        "description": "Untrusted image URLs from database not validated. Property images array could contain malicious URLs. Should validate against whitelist of trusted image domains.",
+        "category": "XSS / Unsafe URL handling"
+      },
+      {
+        "severity": "medium",
+        "file": "app/api/bookings/route.ts",
+        "line": 1,
+        "description": "No rate limiting on POST /api/bookings endpoint. Attackers can spam booking creation requests for denial of service. Should implement rate limiting per IP/user.",
+        "category": "Denial of Service"
+      },
+      {
+        "severity": "medium",
+        "file": "app/api/bookings/route.ts",
+        "line": 21,
+        "description": "Detailed validation error disclosure to client. Returns parsed.error.flatten() which exposes schema structure. Should return generic error messages to clients.",
+        "category": "Information Disclosure"
+      },
+      {
+        "severity": "medium",
+        "file": "app/api/properties/route.ts",
+        "line": 1,
+        "description": "No CORS headers configured. Missing explicit CORS policy configuration. Should define allowed origins.",
+        "category": "CORS/CSRF"
+      },
+      {
+        "severity": "medium",
+        "file": "components/BookingForm.tsx",
+        "line": 27,
+        "description": "No CSRF token on booking form submission. POST request lacks CSRF protection. Should implement CSRF tokens using Next.js middleware.",
+        "category": "CSRF"
+      },
+      {
+        "severity": "low",
+        "file": ".claude/helpers/session.js",
+        "line": 25,
+        "description": "Session context data stored in plaintext JSON file. If sensitive data is stored in context, it's exposed. Should encrypt sensitive session data.",
+        "category": "Data Protection"
+      },
+      {
+        "severity": "low",
+        "file": "lib/supabase.ts",
+        "line": 5,
+        "description": "Supabase anon key in public environment variables (by design). While NEXT_PUBLIC_ prefix indicates this is intentional, security depends entirely on Row-Level Security (RLS) configuration in Supabase, which cannot be verified from codebase.",
+        "category": "Dependency Trust"
+      },
+      {
+        "severity": "low",
+        "file": "package.json",
+        "line": 1,
+        "description": "No dependency scanning for known vulnerabilities. Should run 'npm audit' and pin critical dependencies to known-good versions.",
+        "category": "Dependency Management"
       }
     ],
-    "riskScore": 28,
+    "riskScore": 72,
     "recommendations": [
-      "Set explicit file permissions (0o600) for all sensitive files: memory.js:22, session.js:21. Example: fs.writeFileSync(path, JSON.stringify(data), { mode: 0o600 })",
-      "Validate/whitelist memory and session keys to prevent prototype pollution and namespace issues",
-      "Handle temporary file cleanup errors explicitly in github-safe.js rather than silently ignoring them",
-      "Add encryption for sensitive context/session data at rest, or document security assumptions",
-      "Review .claude-flow/data/ and .claude-flow/sessions/ directories to ensure restrictive permissions",
-      "No hardcoded secrets, SQL injection, or XSS vulnerabilities detected in provided code",
-      "Ensure Node.js dependencies in package.json are regularly audited (file not provided - cannot assess)"
-    ]
+      "URGENT: Implement authentication middleware for /api/bookings endpoint. Use NextAuth.js or similar to verify user identity before creating bookings.",
+      "Add input validation: Validate property IDs are valid UUIDs and exist before querying. Validate all user inputs at API boundaries.",
+      "Implement rate limiting on all API endpoints using a library like 'next-rate-limit' or middleware approach.",
+      "Add CSRF protection: Use Next.js CSRF middleware and include tokens in form submissions.",
+      "Validate image URLs: Implement domain whitelist for property images from Supabase.",
+      "Remove detailed validation errors from API responses. Return generic error messages to clients, log details server-side only.",
+      "Verify Supabase Row-Level Security (RLS) is properly configured to prevent unauthorized data access.",
+      "Configure explicit CORS headers in Next.js middleware specifying allowed origins.",
+      "Run 'npm audit' and update vulnerable dependencies. Add 'npm audit' to CI/CD pipeline.",
+      "Encrypt sensitive session data before storing to disk.",
+      "Add Content Security Policy (CSP) headers to prevent XSS attacks."
+    ],
+    "summary": {
+      "criticalFindings": 1,
+      "highRiskFindings": 0,
+      "mediumRiskFindings": 6,
+      "lowRiskFindings": 3,
+      "mainConcerns": [
+        "Unauthenticated booking creation endpoint",
+        "Missing rate limiting and CSRF protection",
+        "Insufficient input validation",
+        "Detailed error disclosures"
+      ]
+    }
   },
-  "rawOutputPreview": "Based on my analysis of the provided codebase, here's the security vulnerability report:\n\n```json\n{\n  \"vulnerabilities\": [\n    {\n      \"severity\": \"medium\",\n      \"file\": \".claude/helpers/memory.js\",\n      \"line\": 22,\n      \"description\": \"Insecure file permissions: JSON memory files created with default umask (likely 0644). Sensitive session/context data may be world-readable. Should use fs.writeFileSync(MEMORY_FILE, data, { mode: 0o600 }) to restrict to owner-only access.\"\n    },\n    {\n      \"severity\": \"medium\",\n      \"file\": \".claude/helpers/session.js\",\n      \"line\": 21,\n      \"description\": \"Insecure file permissions: Session files created with default umask. Files contain context data and metrics that could be sensitive. Should explicitly set file mode to 0o600 (owner-only read/write).\"\n    },\n    {\n      \"severity\": \"low\",\n      \"file\": \".claude/helpers/memory.js\",\n      \"line\": 34,\n      \"description\": \"Prototype pollution risk: User-supplied keys (e.g., '__proto__', 'constructor') could potentially modify object prototypes. Mitigated by JSON serialization but should validate keys against a whitelist or reject special names.\"\n    },\n    {\n      \"severity\": \"low\",\n      \"file\": \".claude/helpers/github-safe.js\",\n      \"line\": 76,\n      \"description\": \"Silent cleanup of temporary files: Empty catch block ignores cleanup failures which could leave sensitive body content in /tmp. Should log or handle cleanup errors, or use try-finally with explicit error handling.\"\n    },\n    {\n      \"severity\": \"low\",\n      \"file\": \".claude/helpers/session.js\",\n      \"line\": 18,\n      \"description\": \"No input validation on session keys: update() method accepts arbitrary key names without validation. Could create invalid JSON keys or namespace collisions.\"\n    }\n  ],\n  \"riskScore\": 28,\n  \"recommendations\": [\n    \"Set explicit file permissions (0o600) for all sensitive files: memory.js:22, session.js:21. Example: fs.writeFileSync(path, JSON.stringify(data), { mode: 0o600 })\",\n   ",
-  "rawOutputLength": 3298
+  "rawOutputPreview": "Based on my analysis of the codebase, I've identified several security vulnerabilities. Here's the comprehensive report:\n\n```json\n{\n  \"vulnerabilities\": [\n    {\n      \"severity\": \"high\",\n      \"file\": \"app/api/bookings/route.ts\",\n      \"line\": 16,\n      \"description\": \"Missing authentication check on booking creation endpoint. Any unauthenticated user can create bookings for any property. Endpoint should verify user identity before processing bookings.\",\n      \"category\": \"Authentication/Authorization\"\n    },\n    {\n      \"severity\": \"medium\",\n      \"file\": \"lib/supabase.ts\",\n      \"line\": 13,\n      \"description\": \"Missing input validation on propertyId parameter in getProperty(). While Supabase RLS provides protection, explicit validation at application layer is missing. Should validate UUID format and existence.\",\n      \"category\": \"Input Validation\"\n    },\n    {\n      \"severity\": \"medium\",\n      \"file\": \"lib/supabase.ts\",\n      \"line\": 18,\n      \"description\": \"Untrusted image URLs from database not validated. Property images array could contain malicious URLs. Should validate against whitelist of trusted image domains.\",\n      \"category\": \"XSS / Unsafe URL handling\"\n    },\n    {\n      \"severity\": \"medium\",\n      \"file\": \"app/api/bookings/route.ts\",\n      \"line\": 1,\n      \"description\": \"No rate limiting on POST /api/bookings endpoint. Attackers can spam booking creation requests for denial of service. Should implement rate limiting per IP/user.\",\n      \"category\": \"Denial of Service\"\n    },\n    {\n      \"severity\": \"medium\",\n      \"file\": \"app/api/bookings/route.ts\",\n      \"line\": 21,\n      \"description\": \"Detailed validation error disclosure to client. Returns parsed.error.flatten() which exposes schema structure. Should return generic error messages to clients.\",\n      \"category\": \"Information Disclosure\"\n    },\n    {\n      \"severity\": \"medium\",\n      \"file\": \"app/api/properties/route.ts\",\n      \"line\": 1,\n      \"description\": \"No CORS headers configured. Missin",
+  "rawOutputLength": 5414
 }
