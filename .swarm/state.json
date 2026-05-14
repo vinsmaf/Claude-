@@ -1,8 +1,41 @@
 {
-  "id": "swarm-1778762698580-m6nhqf",
-  "topology": "hierarchical-mesh",
-  "maxAgents": 15,
+  "swarmId": "swarm-mp5hi2gc",
+  "objective": "Scaffold a production-ready Next.js full-stack app: app router, TypeScript, Tailwind CSS, API routes, a simple home page, and a /api/hello route. Create all files in the project root.",
   "strategy": "development",
-  "initializedAt": "2026-05-14T12:44:58.580Z",
-  "status": "ready"
+  "status": "initialized",
+  "agents": 8,
+  "agentPlan": [
+    {
+      "role": "Coordinator",
+      "type": "coordinator",
+      "count": 1,
+      "purpose": "Orchestrate workflow"
+    },
+    {
+      "role": "Architect",
+      "type": "architect",
+      "count": 1,
+      "purpose": "System design"
+    },
+    {
+      "role": "Coder",
+      "type": "coder",
+      "count": 3,
+      "purpose": "Implementation"
+    },
+    {
+      "role": "Tester",
+      "type": "tester",
+      "count": 2,
+      "purpose": "Quality assurance"
+    },
+    {
+      "role": "Reviewer",
+      "type": "reviewer",
+      "count": 1,
+      "purpose": "Code review"
+    }
+  ],
+  "startedAt": "2026-05-14T12:48:15.854Z",
+  "parallel": true
 }
